@@ -382,10 +382,12 @@ export default class ItemListTree extends React.PureComponent {
     let title = isGroup
       ? item.title
       : createName(item)
-    title = highlight(
-      title,
-      this.state.keyword
-    )
+    title = isGroup
+      ? item.title
+      : highlight(
+        title,
+        this.state.keyword
+      )
     return (
       <div className={cls} key={item.id} title={title}>
         <div className="tree-item-title elli">
@@ -430,13 +432,42 @@ export default class ItemListTree extends React.PureComponent {
     })
   }
 
+  renderGroupChildNodes = bookmarkGroupIds => {
+    let bookmarkGroups = this.props.bookmarkGroups.filter(
+      d => bookmarkGroupIds.includes(d.id)
+    )
+    return bookmarkGroups.map(node => {
+      let {bookmarkIds = [], id} = node
+      return (
+        <TreeNode
+          key={id}
+          title={this.renderItemTitle(node, true)}
+        >
+          {
+            bookmarkIds.length
+              ? this.renderChildNodes(bookmarkIds)
+              : null
+          }
+        </TreeNode>
+      )
+    })
+  }
+
   renderItem = (item) => {
-    let {bookmarkIds = []} = item
+    let {
+      bookmarkIds = [],
+      bookmarkGroupIds = []
+    } = item
     return (
       <TreeNode
         key={item.id}
         title={this.renderItemTitle(item, true)}
       >
+        {
+          bookmarkGroupIds.length
+            ? this.renderGroupChildNodes(bookmarkGroupIds)
+            : null
+        }
         {
           bookmarkIds.length
             ? this.renderChildNodes(bookmarkIds)
@@ -470,7 +501,7 @@ export default class ItemListTree extends React.PureComponent {
           onClick={this.newBookmarkGroup}
           title={`${s('new')} ${c('bookmarkCategory')}`}
         >
-          <Icon type="folder"  className="with-plus" />
+          <Icon type="folder" className="with-plus" />
         </Button>
         <Btns
           {...this.props}
@@ -523,6 +554,9 @@ export default class ItemListTree extends React.PureComponent {
     } = this.props
     let {keyword} = this.state
     let expandedKeys = this.props.expandedKeys || this.state.expandedKeys
+    let level1Bookgroups = bookmarkGroups.filter(
+      d => !d.level || d.level < 2
+    )
     return (
       <div className={`tree-list item-type-${type}`}>
         {
@@ -544,7 +578,7 @@ export default class ItemListTree extends React.PureComponent {
             selectedKeys={[activeItemId]}
             onDrop={this.onDrop}
           >
-            {bookmarkGroups.map(this.renderItem)}
+            {level1Bookgroups.map(this.renderItem)}
           </Tree>
         </div>
       </div>
